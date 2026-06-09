@@ -112,7 +112,7 @@ class FPBrowserClient:
         """
         # 说明：显式拆分超时，避免某些版本/场景下默认值不生效导致“无限等待”
         timeout = httpx.Timeout(connect=15.0, read=60.0, write=30.0, pool=30.0)
-        return httpx.AsyncClient(timeout=timeout)
+        return httpx.AsyncClient(timeout=timeout, trust_env=False)
 
     async def list_windows(
         self,
@@ -1615,4 +1615,3 @@ class FPBrowserClient:
                 }
             )
         return result
-

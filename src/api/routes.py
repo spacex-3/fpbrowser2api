@@ -104,7 +104,6 @@ OPENAI_COMPAT_VIDEO_MODEL_SET = set(OPENAI_COMPAT_VIDEO_MODELS)
 OPENAI_COMPAT_NOOP_MODELS = (
     # 专用于 NewAPI 按次扣费：不创建真实任务，只返回一个合法的
     # OpenAI chat completion 响应，让 NewAPI 完成鉴权、日志和额度扣减。
-    "fpbrowser-use",
 )
 OPENAI_COMPAT_NOOP_MODEL_SET = set(OPENAI_COMPAT_NOOP_MODELS)
 OPENAI_COMPAT_MODEL_SET = OPENAI_COMPAT_VIDEO_MODEL_SET | OPENAI_COMPAT_NOOP_MODEL_SET
@@ -179,9 +178,9 @@ def _normalize_video_task_payload(payload: Dict[str, Any]) -> tuple[str, Dict[st
     elif model in {"veo-omni-flash-video-edit"}:
         task_type_code = "veo_workflow"
         duration = payload.get("duration")
-        if duration != 8:
-            raise HTTPException(status_code=400, detail="veo-omni-flash only supports duration=8")
-        payload["n_frames"] = 240
+        if duration != 10:
+            raise HTTPException(status_code=400, detail="veo-omni-flash-video-edit only supports duration=10")
+        payload["n_frames"] = 300
         payload["video_model"] = "abra_t2v_10s"
         payload["model"] = "veo-omni-flash"
     elif model in GPT_IMAGE2_VIDEO_MODELS:
@@ -700,16 +699,12 @@ async def create_chat_completion_for_newapi_test(
     The real video creation endpoint is `/v1/videos`; this endpoint only
     returns a lightweight success response.
 
-    Special model:
-    - `fpbrowser-use`: no-op charging model for NewAPI. It does not create any
-      real task; NewAPI can configure this model as fixed-price / per-call so
-      every successful request deducts quota.
+    This endpoint is only for lightweight channel tests on real generation
+    model names. The old `fpbrowser-use` no-op charging model is intentionally
+    disabled so it cannot create extra NewAPI consumption records.
     """
 
     model = str((body or {}).get("model") or "").strip()
-    if model == "fpbrowser-use":
-        return _build_openai_chat_completion(model, "ok")
-
     if model not in OPENAI_COMPAT_VIDEO_MODEL_SET:
         raise HTTPException(
             status_code=400,

@@ -167,7 +167,13 @@ class Config:
         if raw.strip():
             return raw.strip()
         base_url = str(self._config.get("extension_executor", {}).get("base_url", "") or "").strip();
-        bridge_url = f"ws://{base_url}/api/extension/ws"
+        if base_url.lower().startswith(("ws://", "wss://")):
+            bridge_url = base_url.rstrip("/") + "/api/extension/ws"
+        elif base_url.lower().startswith(("http://", "https://")):
+            scheme = "wss" if base_url.lower().startswith("https://") else "ws"
+            bridge_url = f"{scheme}://{base_url.split('://', 1)[1].rstrip('/')}/api/extension/ws"
+        else:
+            bridge_url = f"ws://{base_url}/api/extension/ws"
         return bridge_url
 
     @property
@@ -184,7 +190,10 @@ class Config:
         if raw.strip():
             return raw.strip()
         base_url = str(self._config.get("extension_executor", {}).get("base_url", "") or "").strip();
-        launcher_url = f"http://{base_url}/"
+        if base_url.lower().startswith(("http://", "https://")):
+            launcher_url = base_url.rstrip("/") + "/"
+        else:
+            launcher_url = f"http://{base_url}/"
         return launcher_url
 
     @property
@@ -201,4 +210,3 @@ class Config:
 
 
 config = Config()
-

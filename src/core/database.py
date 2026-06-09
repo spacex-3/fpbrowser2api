@@ -1909,8 +1909,17 @@ class Database:
                     continue
                 # 若该 window_key 已存在于其他 space_pk 下，跳过（窗口可能已被转移到别的项目空间）
                 cur_chk = await db.execute(
-                    "SELECT 1 FROM windows WHERE window_key = ? AND deleted = 0 LIMIT 1",
-                    (window_key,),
+                    """
+                    SELECT 1
+                    FROM windows w
+                    JOIN spaces s ON s.id = w.space_pk
+                    WHERE w.window_key = ?
+                      AND w.deleted = 0
+                      AND w.space_pk <> ?
+                      AND COALESCE(s.deleted, 0) = 0
+                    LIMIT 1
+                    """,
+                    (window_key, int(space_pk)),
                 )
                 if await cur_chk.fetchone():
                     skipped += 1
