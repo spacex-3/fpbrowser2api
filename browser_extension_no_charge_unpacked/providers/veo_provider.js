@@ -38,6 +38,7 @@ const HUMAN_ACTIVITY_ACTIONS = new Set([
   "human_activity",
   "simulate_human_activity"
 ]);
+const VEO_EDIT_OUTPUT_FPS = 24;
 let veoTaskRunSeq = 0;
 let veoHumanActivityPromise = null;
 let veoHumanActivityInfo = null;
@@ -1199,8 +1200,8 @@ function computeVideoEndFrameIndex(p, meta, durationSeconds) {
   const fps = finitePositiveNumber(p.ingredients_video_fps || p.video_reference_fps || meta.fps || meta.frameRate || meta.frame_rate);
   if (fps && durationSeconds > 0) return Math.max(0, Math.round(durationSeconds * fps) - 1);
 
-  // 最后的兼容兜底：旧逻辑固定按 8fps 猜，只有在 Python/显式元数据都缺失时才使用。
-  return Math.max(1, Math.round((durationSeconds || 30) * 8));
+  // abra_edit 返回 24fps 视频；没有 Python/显式帧数据时按输出 fps 估算。
+  return Math.max(1, Math.round((durationSeconds || 30) * VEO_EDIT_OUTPUT_FPS));
 }
 
 function assertReferenceVideoDuration(durationSeconds, url) {

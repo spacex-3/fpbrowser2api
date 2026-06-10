@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 
 from fastapi import HTTPException
 
@@ -38,6 +39,12 @@ class VideoCompatRoutesTest(unittest.TestCase):
 
         self.assertEqual(ctx.exception.status_code, 400)
         self.assertIn("veo-omni-flash-video-edit only supports duration=10", ctx.exception.detail)
+
+    def test_veo_provider_video_edit_fallback_uses_24fps_output_frames(self) -> None:
+        source = Path("browser_extension_no_charge_unpacked/providers/veo_provider.js").read_text()
+
+        self.assertIn("VEO_EDIT_OUTPUT_FPS = 24", source)
+        self.assertIn("durationSeconds || 30) * VEO_EDIT_OUTPUT_FPS", source)
 
 
 if __name__ == "__main__":
